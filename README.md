@@ -228,3 +228,75 @@ docker run --rm --name python-app-container python-app
 - Chỉ cần thay đổi phần `FROM`, `COPY`, và `CMD` cho phù hợp với ngôn ngữ và ứng dụng của bạn.
 
 ![alt text](image-12.png)
+
+## Containerizing a Web Application
+
+- Trong phần này, chúng ta sẽ tìm hiểu cách container hóa một ứng dụng web đơn giản bằng Flask, một framework Python phổ biến.
+- Chúng ta sẽ tạo một Dockerfile để xây dựng một Docker image cho ứng dụng Flask này.
+
+```Dockerfile
+## 1. Which base image do you want to use?
+
+FROM python:3.9-slim
+## 2. Set the working directory
+WORKDIR /app/
+
+## 3. Copy the project files into the working directory.
+COPY . . 
+
+## 4. Install the dependencies
+RUN pip install -r flask-app-demo/requirements.txt
+
+## 5. Document and inform the developer that the application will use PORT 5000 of the container.
+EXPOSE 5000
+
+## 6. Define the command to run when the container starts.
+
+CMD ["python", "flask-app-demo/app.py"]
+```
+
+- Lưu Dockerfile này vào thư mục `flask` trong dự án của bạn. Giải thích các dòng trong Dockerfile:
+- `FROM python:3.9-slim`: Sử dụng image Python 3.
+- `WORKDIR /app/`: Thiết lập thư mục làm việc bên trong container.
+- `COPY . .`: Sao chép tất cả các tệp từ thư mục hiện tại vào thư mục làm việc trong container.
+- `RUN pip install -r requirements.txt`: Cài đặt các phụ thuộc từ tệp `requirements.txt`.
+- `EXPOSE 5000`: Mở cổng 5000 để ứng dụng Flask có thể lắng nghe.
+- `CMD ["python", "flask-app-demo/app.py"]`: Định nghĩa lệnh sẽ chạy khi container khởi động.
+
+- Chạy lệnh sau để xây dựng Docker image từ Dockerfile( CHỖ NÀY CẦN PHẢI THAY ĐỔI ĐƯỜNG DẪN TỚI THƯ MỤC CHỨA DOCKERFILE CỦA BẠN):
+
+```bash
+docker build -t flask-app .
+```
+
+![alt text](image-13.png)
+
+- Sau khi xây dựng thành công, bạn có thể chạy ứng dụng Flask bằng lệnh sau:
+
+```bash
+docker run --rm --name flask-app-container -p 5000:5000 flask-app
+```
+
+Giải thích các cờ:
+
+- `--rm`: Tự động xóa container khi nó dừng lại.
+- `--name flask-app-container`: Đặt tên cho container để dễ quản lý.
+- `-p 5000:5000`: Chuyển tiếp cổng 5000 từ máy chủ đến cổng 5000 trong container.
+
+- Kết quả:
+
+![alt text](image-14.png)
+
+- Bạn có thể dùng trình duyệt để truy cập ứng dụng Flask tại địa chỉ `http://localhost:5000`.
+
+- Bạn cũng có thể tương tác với docker container đang chạy bằng cách sử dụng lệnh `docker exec`:
+
+```bash
+docker exec -it flask-app-container /bin/bash
+```
+
+- Lệnh này sẽ mở một terminal bên trong container, cho phép bạn thực hiện các lệnh trực tiếp trong môi trường của ứng dụng Flask.
+
+- Bạn cũng có thể thay đổi cách khai báo theo thứ tự khác nhau miễn là cung cấp đủ các chỉ thị cần thiết. Ví dụ, bạn có thể đặt `EXPOSE` trước `CMD` hoặc `RUN` trước `COPY`, miễn là các chỉ thị vẫn được thực hiện đúng thứ tự.
+
+- Bạn có thể thêm các chỉ thị khác như `ENV` để thiết lập biến môi trường hoặc `VOLUME` để tạo volume cho dữ liệu.
