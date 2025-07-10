@@ -129,3 +129,102 @@ docker run -e MESSAGE="Hello, Docker!" -v "D:\SeniorProject2025\docker-kube-tran
 ![alt text](image-6.png)
 
 ## Building Docker Images From Dockerfile
+
+### Giới thiệu về Dockerfile
+
+- Dockerfile là một tập tin văn bản chứa các lệnh để xây dựng một Docker image.
+- Dockerfile cho phép bạn tự động hóa quá trình tạo Docker image, giúp tái sửng và chia sẻ ứng dụng dễ dàng hơn.
+- Dockerfile bao gồm các chỉ thị để cài đặt phần mềm, sao chép tệp tin, thiết lập biến môi trường và chạy lệnh khi container được khởi động.
+
+### Cấu trúc cơ bản của Dockerfile
+
+- Một Dockerfile thường bao gồm các chỉ thị sau:
+  - `FROM`: Chỉ định image cơ sở để xây dựng.
+  - `RUN`: Chạy lệnh trong quá trình xây dựng image.
+  - `COPY` hoặc `ADD`: Sao chép tệp tin từ máy chủ vào image.
+  - `CMD` hoặc `ENTRYPOINT`: Chỉ định lệnh sẽ chạy khi container khởi động.
+  - `EXPOSE`: Mở cổng để giao tiếp với container.
+
+### Chạy ứng dụng Ruby từ Dockerfile
+
+- Trong ví dụ này, chúng ta sẽ tạo một Dockerfile để chạy ứng dụng Ruby.
+
+```Dockerfile
+# Dockerfile for Ruby Application
+## 1. Which base image do you want to use?
+
+FROM ruby:3.1
+
+## 2. Set the working directory.
+WORKDIR /app
+
+## 3. Copy your source code file to the working directory.
+COPY script.rb .
+## 4. Define the command to run when the container starts.
+CMD ["ruby", "script.rb"]
+```
+
+- Lưu Dockerfile này vào thư mục `ruby` trong dự án của bạn.
+
+- Chạy lệnh sau để xây dựng Docker image từ Dockerfile( CHỖ NÀY CẦN PHẢI THAY ĐỔI ĐƯỜNG DẪN TỚI THƯ MỤC CHỨA DOCKERFILE CỦA BẠN):
+
+```bash
+docker build -t ruby-app .
+```
+
+![alt text](image-7.png)
+
+![alt text](image-8.png)
+
+- Sau khi xây dựng thành công, bạn có thể chạy ứng dụng Ruby bằng lệnh sau:
+
+```bash
+docker run --rm --name ruby-app-container ruby-app
+```
+
+- Lệnh này sẽ chạy container từ image `ruby-app` và tự động xóa container khi nó dừng lại.
+
+![alt text](image-9.png)
+
+### Chạy ứng dụng Python từ Dockerfile
+
+- Tương tự, chúng ta sẽ tạo một Dockerfile để chạy ứng dụng Python.
+
+```Dockerfile
+# Dockerfile for Python Application
+## 1. Which base image do you want to use?
+
+FROM python:3.9
+
+## 2. Set the working directory.
+WORKDIR /app
+
+## 3. Copy your source code file to the working directory.
+COPY python-app.py .
+
+## 4. Define the command to run when the container starts.
+CMD ["python", "python-app.py"]
+```
+
+- Lưu Dockerfile này vào thư mục `python` trong dự án của bạn.
+- Chạy lệnh sau để xây dựng Docker image từ Dockerfile( CHỖ NÀY CẦN PHẢI THAY ĐỔI ĐƯỜNG DẪN TỚI THƯ MỤC CHỨA DOCKERFILE CỦA BẠN):
+
+```bash
+docker build -t python-app .
+```
+
+![alt text](image-10.png)
+
+- Sau khi xây dựng thành công, bạn có thể chạy ứng dụng Python bằng lệnh sau:
+
+```bash
+docker run --rm --name python-app-container python-app
+```
+
+![alt text](image-11.png)
+
+### Tương tự, bạn có thể tạo Dockerfile cho các ứng dụng Java, Go, và các ngôn ngữ khác
+
+- Chỉ cần thay đổi phần `FROM`, `COPY`, và `CMD` cho phù hợp với ngôn ngữ và ứng dụng của bạn.
+
+![alt text](image-12.png)
