@@ -32,7 +32,7 @@
 ```
 
 ```bash
-docker run -v "D:\SeniorProject2025\docker-course-remastered\lesson-starter-projects\01-starter-code:/app/" python:3.8-slim python /app/python-app.py
+docker run -v "D:\SeniorProject2025\docker-kube-tranning\docker-tranning\run-application-inside-docker-container\python:/app/" python:3.8-slim python /app/python-app.py
 ```
 
 - Chúng ta sẽ sử dụng câu lệnh `docker run` để chạy ứng dụng Python này bên trong Docker Container.
@@ -46,7 +46,7 @@ docker run -v "D:\SeniorProject2025\docker-course-remastered\lesson-starter-proj
 - Bạn cũng có thể đặt tên cho container của mình bằng cách sử dụng cờ `--name` và thêm cờ `--rm` để tự động xóa container khi nó dừng lại.
 
 ```bash
-docker run --name my-python-app --rm -v "D:\SeniorProject2025\docker-course-remastered\lesson-starter-projects\01-starter-code:/app/" python:3.8-slim python /app/python-app.py
+docker run --name my-python-app --rm -v "D:\SeniorProject2025\docker-kube-tranning\docker-tranning\run-application-inside-docker-container\python:/app/" python:3.8-slim python /app/python-app.py
 ```
 
 - Nên đặt tên cho container của bạn để dễ dàng quản lý và theo dõi.
@@ -74,7 +74,7 @@ Developer: Greetings, Captain DevOps! This application is usually executed with 
 ```
 
 ```bash
-docker run -v "D:\SeniorProject2025\docker-course-remastered\lesson-starter-projects\02-starter-code:/app/" openjdk:11 java -cp /app/JavaApp.jar JavaApp
+docker run -v "D:\SeniorProject2025\docker-kube-tranning\docker-tranning\run-application-inside-docker-container\java:/app/" openjdk:11 java -cp /app/JavaApp.jar JavaApp
 ```
 
 - Kết quả:
@@ -97,7 +97,7 @@ docker run -v "D:\SeniorProject2025\docker-course-remastered\lesson-starter-proj
 ```
 
 ```bash
-docker run -v "D:\SeniorProject2025\docker-course-remastered\workbook-starter-projects\01-starter-projects\ruby-user-input:/app/" ruby:3.0 ruby /app/script.rb
+docker run -v "D:\SeniorProject2025\docker-kube-tranning\docker-tranning\run-application-inside-docker-container\ruby:/app/" ruby:3.0 ruby /app/script.rb
 ```
 
 - Kết quả:
@@ -118,7 +118,7 @@ docker run -v "D:\SeniorProject2025\docker-course-remastered\workbook-starter-pr
 ```
 
 ```bash
-docker run -e MESSAGE="Hello, Docker!" -v "D:\SeniorProject2025\docker-course-remastered\workbook-starter-projects\01-starter-projects\go-environment-variables:/app/" golang:1.20 go run /app/main.go
+docker run -e MESSAGE="Hello, Docker!" -v "D:\SeniorProject2025\docker-kube-tranning\docker-tranning\run-application-inside-docker-container\go:/app/" golang:1.20 go run /app/main.go
 ```
 
 - Giải thích:
