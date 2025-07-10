@@ -300,3 +300,36 @@ docker exec -it flask-app-container /bin/bash
 - Bạn cũng có thể thay đổi cách khai báo theo thứ tự khác nhau miễn là cung cấp đủ các chỉ thị cần thiết. Ví dụ, bạn có thể đặt `EXPOSE` trước `CMD` hoặc `RUN` trước `COPY`, miễn là các chỉ thị vẫn được thực hiện đúng thứ tự.
 
 - Bạn có thể thêm các chỉ thị khác như `ENV` để thiết lập biến môi trường hoặc `VOLUME` để tạo volume cho dữ liệu.
+
+## Docker network and Microservices
+
+- Trong phần này, chúng ta sẽ tìm hiểu về Docker network và cách sử dụng nó để kết nối các container trong một ứng dụng microservices.
+- Docker network cho phép các container giao tiếp với nhau thông qua các địa chỉ IP và tên miền.
+- Tạo một mạng Docker để kết nối các container:
+
+```bash
+docker network create my-network
+```
+
+- Lệnh này sẽ tạo một mạng Docker mới có tên `my-network`.
+- Chúng ta sẽ sử dụng mạng này để kết nối các container trong ứng dụng microservices của mình.
+
+```bash
+docker run --rm --name service1 --network my-network service1-image
+docker run --rm --name service2 --network my-network service2-image
+docker run --rm --name service3 --network my-network service3-image
+```
+
+- Các lệnh này sẽ chạy các container `service1`, `service2`, và `service3` trên mạng `my-network`.
+- Bạn có thể sử dụng tên container để giao tiếp giữa các dịch vụ. Ví dụ, nếu `service1` cần gọi `service2`, nó có thể sử dụng địa chỉ `http://service2:port`.
+- Bạn có thể kiểm tra các mạng Docker hiện có bằng lệnh:
+
+```bash
+docker network ls
+```
+
+- Để xem thông tin chi tiết về một mạng cụ thể, bạn có thể sử dụng lệnh:
+
+```bash
+docker network inspect my-network
+```
