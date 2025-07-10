@@ -83,9 +83,7 @@ docker run -v "D:\SeniorProject2025\docker-kube-tranning\docker-tranning\run-app
 
 - Có thể dùng ChatGPT để convert các câu lệnh để chạy trên Windows sang Linux hoặc ngược lại.
 
-### Workbook
-
-#### Chạy ứng dụng Ruby bên trong Docker Container
+### Chạy ứng dụng Ruby bên trong Docker Container
 
 - Hướng dẫn:
 
@@ -103,7 +101,7 @@ docker run -v "D:\SeniorProject2025\docker-kube-tranning\docker-tranning\run-app
 - Kết quả:
 ![alt text](image-5.png)
 
-#### Chạy ứng dụng Golang bên trong Docker Container
+### Chạy ứng dụng Golang bên trong Docker Container
 
 - Hướng dẫn:
 
