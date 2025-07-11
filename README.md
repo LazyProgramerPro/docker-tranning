@@ -32,10 +32,17 @@
 ```
 
 ```bash
+docker run -v <local_path>:<container_path> <image_name>
+```
+
+```bash
 docker run -v "D:\SeniorProject2025\docker-kube-tranning\docker-tranning\run-application-inside-docker-container\python:/app/" python:3.8-slim python /app/python-app.py
 ```
 
 - Chúng ta sẽ sử dụng câu lệnh `docker run` để chạy ứng dụng Python này bên trong Docker Container.
+
+- Lệnh này bằng lệnh `docker create` + `docker start`
+
 - Chúng ta sẽ sử dụng cờ `-v` để gắn thư mục hiện tại vào thư mục `/app` bên trong Docker Container.
 - Chúng ta sẽ sử dụng image `python:3.8-slim` để chạy ứng dụng Python này.
 - Chúng ta sẽ sử dụng câu lệnh `python /app/python-app.py` để chạy ứng dụng Python này bên trong Docker Container. bên trong Docker Container.
@@ -136,6 +143,8 @@ docker run -e MESSAGE="Hello, Docker!" -v "D:\SeniorProject2025\docker-kube-tran
 - Dockerfile cho phép bạn tự động hóa quá trình tạo Docker image, giúp tái sửng và chia sẻ ứng dụng dễ dàng hơn.
 - Dockerfile bao gồm các chỉ thị để cài đặt phần mềm, sao chép tệp tin, thiết lập biến môi trường và chạy lệnh khi container được khởi động.
 
+![alt text](image-15.png)
+
 ### Cấu trúc cơ bản của Dockerfile
 
 - Một Dockerfile thường bao gồm các chỉ thị sau:
@@ -144,6 +153,41 @@ docker run -e MESSAGE="Hello, Docker!" -v "D:\SeniorProject2025\docker-kube-tran
   - `COPY` hoặc `ADD`: Sao chép tệp tin từ máy chủ vào image.
   - `CMD` hoặc `ENTRYPOINT`: Chỉ định lệnh sẽ chạy khi container khởi động.
   - `EXPOSE`: Mở cổng để giao tiếp với container.
+
+- Để build image từ Dockerfile, chúng ta sử dụng lệnh `docker build`:
+
+```bash
+docker build -t <image_name> .
+
+# docker build -t python-app .
+# docker build -t python-app:1.0.0 . (Thêm tag cho image khi code có nhiều version)
+# docker build -t python-app:latest . (Thêm tag cho image khi code có nhiều version)
+# Dấu `.` có nghĩa là thư mục hiện tại
+```
+
+- Sau khi build xong, chúng ta có thể thấy image này trong danh sách các image đang có trên local bằng lệnh `docker images` hoặc `docker image ls
+`
+- Sau khi build xong, chúng ta có thể chạy image này bằng lệnh `docker run <image_name>` hoặc chúng ta có thể đặt tên cho container name bằng cách sử dụng `--name <container_name>`. Nếu ko đặt tên thì docker sẽ tự động tạo ra 1 cái tên cho container này.
+
+```bash
+docker run -d --name python-app-container python-app
+```
+
+- Cờ `-d` sẽ chạy container ở chế độ nền (detached mode), nếu không có cờ này thì container sẽ chạy ở chế độ foreground và bạn sẽ thấy log của ứng dụng trong terminal.
+
+- Lệnh `-it` là viết tắt của `--interactive` và `--tty`, nó cho phép chúng ta tương tác với container thông qua terminal
+
+![alt text](image-16.png)
+
+- Lệnh `--rm` là viết tắt của `--remove`, nó sẽ tự động xóa container khi container dừng lại
+- Để xóa tất cả các container đã dừng lại, chúng ta sử dụng lệnh `prune`:
+
+```bash
+docker container prune
+docker system prune -a
+```
+
+- Dấu `.` trong lệnh `COPY` có nghĩa là thư mục hiện tại. Không nên sử dụng `COPY ..` vì nó sẽ copy tất cả các file trong thư mục cha vào trong container. Sử dụng file `.dockerignore` để loại bỏ các file không cần thiết khi build image.
 
 ### Chạy ứng dụng Ruby từ Dockerfile
 
@@ -234,6 +278,10 @@ docker run --rm --name python-app-container python-app
 - Trong phần này, chúng ta sẽ tìm hiểu cách container hóa một ứng dụng web đơn giản bằng Flask, một framework Python phổ biến.
 - Chúng ta sẽ tạo một Dockerfile để xây dựng một Docker image cho ứng dụng Flask này.
 
+- `Ngữ cảnh:` Có 1 anh em nào đó đưa cho bạn 1 con web bằng Java(hoặc bất kì ngôn ngữa nào), nó bảo là chạy trên máy nó được với các dependencies này kia. Bây giờ nó muốn bạn chạy trên máy bạn, nhưng mà bạn không biết nó chạy như thế nào.
+
+### Web app Flask
+
 ```Dockerfile
 ## 1. Which base image do you want to use?
 
@@ -300,6 +348,60 @@ docker exec -it flask-app-container /bin/bash
 - Bạn cũng có thể thay đổi cách khai báo theo thứ tự khác nhau miễn là cung cấp đủ các chỉ thị cần thiết. Ví dụ, bạn có thể đặt `EXPOSE` trước `CMD` hoặc `RUN` trước `COPY`, miễn là các chỉ thị vẫn được thực hiện đúng thứ tự.
 
 - Bạn có thể thêm các chỉ thị khác như `ENV` để thiết lập biến môi trường hoặc `VOLUME` để tạo volume cho dữ liệu.
+
+### Web app Java
+
+- Cách 1:
+
+![alt text](image-17.png)
+
+- Cách 2
+
+![alt text](image-18.png)
+
+- Dockerfile cho ứng dụng Java:
+
+```Dockerfile
+## 1. Which base image do you want to use?
+
+FROM maven:3.8-openjdk-17-slim
+
+## 2. Set the working directory.
+
+WORKDIR /app
+
+## 3. Copy the application's project files into the working directory.
+
+COPY springboot-demo  /app
+
+# COPY springboot-demo  .
+
+## 4. Document and inform the developer that the application will use the container port: 8080.
+
+EXPOSE 8080
+
+## 5. Define the command to run when the container starts.
+
+CMD ["mvn", "clean", "spring-boot:run"]
+```
+
+- Lưu Dockerfile này vào thư mục `java` trong dự án của bạn.
+
+- Chạy lệnh sau để xây dựng Docker image từ Dockerfile( CHỖ NÀY CẦN PHẢI THAY ĐỔI ĐƯỜNG DẪN TỚI THƯ MỤC CHỨA DOCKERFILE CỦA BẠN):
+
+```bash
+docker build -t springboot-demo .
+```
+
+- Sau khi xây dựng thành công, bạn có thể chạy ứng dụng Java bằng lệnh sau:
+
+```bash
+docker run -p 8080:8080 --rm --name springboot-demo-container  springboot-demo
+```
+
+- Kết quả:
+
+![alt text](image-19.png)
 
 ## Docker network and Microservices
 
