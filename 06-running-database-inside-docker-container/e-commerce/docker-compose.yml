@@ -1,0 +1,81 @@
+# docker run --network=my-network -p 4000:4000 \\
+# -e REACT_APP_PROFILE_API_HOST=http://profile-management \\
+# -e REACT_APP_PRODUCT_API_HOST=http://product-catalog \\
+# -e REACT_APP_INVENTORY_API_HOST=http://product-inventory \\
+# -e REACT_APP_ORDER_API_HOST=http://order-management \\
+# -e REACT_APP_SHIPPING_API_HOST=http://shipping-and-handling \\
+# -e REACT_APP_CONTACT_API_HOST=http://contact-support-team \\
+# --name ecommerce-ui rslim087/ecommerce-ui
+
+# docker run -p 8080:8080 -e MONGO_URI=<mongo_uri> shipping-and-handling
+
+# docker run -p 3003:3003 -e MYSQL_HOST=<mysql_host> -e MYSQL_PORT=<mysql_port> -e MYSQL_USER=<mysql_user> -e MYSQL_PASSWORD=<mysql_password> -e MYSQL_DATABASE=<mysql_database> authentication-microservice
+
+# docker run -p 3002:3002 -e POSTGRES_HOST=<postgres_host> -e POSTGRES_PORT=<postgres_port> -e POSTGRES_DB=<postgres_db> -e POSTGRES_USER=<postgres_user> -e POSTGRES_PASSWORD=<postgres_password> product-inventory-microservice
+
+# docker run -p 8000:8000 -e MONGODB_HOST=<mongo_host> -e MONGODB_PORT=<mongo_port> -e MONGODB_DATABASE=<mongo_database> contact-support-microservice
+
+# docker run -p 3001:3001 -e MONGODB_HOST=<mongo_host> -e MONGODB_PORT=<mongo_port> -e MONGODB_DATABASE=<mongo_database> product-catalog-microservice
+
+# docker run --network my-network \
+#   -e PRODUCT_INVENTORY_API_HOST=http://product-inventory \
+#   -e PRODUCT_CATALOG_API_HOST=http://product-catalog \
+#   -e SHIPPING_HANDLING_API_HOST=http://shipping-and-handling \
+#   -e SPRING_DATA_MONGODB_URI=mongodb://host:27017/name \
+#   -e SPRING_DATA_MONGODB_DATABASE=order_management \
+#   -p 9090:9090 --name order-management rslim087/order-management
+
+version: "3.8"
+services:
+  ecommerce-ui:
+    image: thuongtt060797/ecommerce-ui:1.0.0
+    ports:
+      - "4000:4000"
+    environment:
+      - REACT_APP_PROFILE_API_HOST=http://profile-management
+      - REACT_APP_PRODUCT_API_HOST=http://product-catalog
+      - REACT_APP_INVENTORY_API_HOST=http://product-inventory
+      - REACT_APP_ORDER_API_HOST=http://order-management
+      - REACT_APP_SHIPPING_API_HOST=http://shipping-and-handling
+      - REACT_APP_CONTACT_API_HOST=http://contact-support-team
+    depends_on:
+      - profile-management
+      - product-catalog
+      - product-inventory
+      - order-management
+      - shipping-and-handling
+      - contact-support-team
+
+  profile-management:
+    image: thuongtt060797/profile-management:1.0.0
+    ports:
+      - "3003:3003"
+
+  shipping-and-handling:
+    image: thuongtt060797/shipping-and-handling:1.0.0
+    ports:
+      - "8080:8080"
+
+  contact-support-team:
+    image: thuongtt060797/contact-support-team:1.0.0
+    ports:
+      - "8000:8000"
+
+  product-inventory:
+    image: thuongtt060797/product-inventory:1.0.0
+    ports:
+      - "3002:3002"
+
+  product-catalog:
+    image: thuongtt060797/product-catalog:1.0.0
+    ports:
+      - "3001:3001"
+
+  order-management:
+    image: thuongtt060797/order-management:1.0.0
+    ports:
+      - "9090:9090"
+    environment:
+      - SHIPPING_HANDLING_API_HOST=http://shipping-and-handling
+      - PRODUCT_INVENTORY_API_HOST=http://product-inventory
+      - PRODUCT_CATALOG_API_HOST=http://product-catalog

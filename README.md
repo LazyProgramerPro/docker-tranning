@@ -881,3 +881,72 @@ docker-compose down
 - Lệnh này sẽ dừng tất cả các container và xóa chúng cùng với mạng và volume liên quan.
 - Bây giờ, bạn có thể truy cập ứng dụng E-commerce UI tại địa chỉ `http://localhost:4000`, Profile Management tại `http://localhost:3003`, Shipping and Handling tại `http://localhost:8080`, Contact Support Team tại `http://localhost:8000`, Product Inventory tại `http://localhost:3002`, Product Catalog tại `http://localhost:3001` và Order Management tại `http://localhost:9090`.
 - Tất cả các dịch vụ này đều được kết nối với nhau thông qua mạng `ecommerce-network`, cho phép chúng giao tiếp với nhau một cách dễ dàng.
+
+## Running Database inside Docker Container
+
+- Trong phần này, chúng ta sẽ tìm hiểu cách chạy một cơ sở dữ liệu bên trong Docker Container.
+- Chúng ta sẽ sử dụng MySQL làm ví dụ, nhưng bạn có thể áp dụng tương tự cho các cơ sở dữ liệu khác như PostgreSQL, MongoDB, v.v.
+
+- Trong trường hợp này khi có thêm cơ sở dữ liệu chúng ta sẽ có những sự thay đổi thực sự lớn
+
+```js
+// Connect to MongoDB
+mongoose.connect(`mongodb://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+```
+
+- Và những gì bây giờ chúng ta cần thiết lập chính là 1 `container MongoDB` để ứng dụng của chúng ta có thể kết nối tới.
+- Ứng dụng `MongoDB` sẽ được chạy bên trong Docker Container và khi container này bị dừng lại, dữ liệu sẽ bị mất. Để tránh mất dữ liệu, chúng ta sẽ sử dụng volume để lưu trữ dữ liệu bên ngoài container.
+- Những gì chúng ta cần làm là xác định nơi MongoDB sẽ lưu trữ dữ liệu bên trong container và gắn nó với một volume bên ngoài để dữ liệu không bị mất khi container bị dừng lại.
+- Theo mặc định, MongoDB sẽ lưu trữ dữ liệu trong thư mục `/data/db` bên trong container. Chúng ta sẽ gắn thư mục này với một volume bên ngoài để dữ liệu không bị mất khi container bị dừng lại.
+- Miễn là bạn giữ được volume này và không xóa nó, khi bạn khởi động lại container MongoDB, dữ liệu sẽ được giữ nguyên.
+
+- Tài liệu: <https://hub.docker.com/_/mongo>
+
+```yaml
+version: "3"
+services:
+  flask-app:
+    image: thuongtt060797/grade-submission-portal
+    container_name: flask-app
+    ports:
+      - "5001:5001"
+    environment:
+      - GRADE_SERVICE_HOST=node-server
+    depends_on:
+      - node-server
+
+  node-server:
+    image: thuongtt060797/grade-submission-api:2.0.0
+    container_name: node-server
+    environment:
+      - DB_HOST=mongodb
+      - DB_PORT=27017
+      - DB_NAME=grade_db
+    ports:
+      - "3000:3000"
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=grade_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+volumes:
+  mongodb_data:
+```
+
+- Thêm 1 vài dữ liệu mẫu vào MongoDB để chúng ta có thể kiểm tra ứng dụng của mình: Tắt đi và khởi động lại docker compose
+
+```bash
+docker-compose down
+docker-compose up -d
+```
+
+### Ecommerce Database
+
+- Vẫn sử dụng lại project Ecommerce trong phần 05, tuy nhiên các ứng dụng đã được thêm 1 số config để có thể kết nối với database thật
