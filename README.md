@@ -595,3 +595,294 @@ docker run --rm --name another-container -p 5002:5002 thuongtt060797/grade-submi
 docker run --rm --name additional-container -p 5003:5003 thuongtt060797/grade-submission-portal
 docker run --rm --name extra-container -p 5004:5004 thuongtt060797/grade-submission-api
 ```
+
+## Docker Compose
+
+- Docker Compose là một công cụ cho phép bạn định nghĩa và chạy nhiều container Docker cùng một lúc bằng cách sử dụng một tệp cấu hình.
+- Tệp cấu hình này thường có tên là `docker-compose.yml` và chứa thông tin về các dịch vụ, mạng và volume cần thiết cho ứng dụng của bạn.
+- Docker Compose giúp bạn quản lý các ứng dụng phức tạp với nhiều container một cách dễ dàng hơn, cho phép bạn khởi động, dừng và quản lý các dịch vụ một cách đồng bộ.
+- Để sử dụng Docker Compose, bạn cần cài đặt nó trên máy của mình. Bạn có thể làm theo hướng dẫn trên trang chính thức của Docker.
+
+![alt text](image-28.png)
+
+- Các container sẽ được định nghĩa trong tệp `docker-compose.yml` và có thể được khởi động bằng lệnh:
+
+```bash
+docker-compose up
+```
+
+- Lệnh này sẽ đọc tệp `docker-compose.yml`, tạo và khởi động tất cả các container được định nghĩa trong đó.
+- Để dừng và xóa tất cả các container, mạng và volume được tạo bởi Docker Compose, bạn có thể sử dụng lệnh:
+
+```bash
+docker-compose down
+```
+
+- Lệnh này sẽ dừng tất cả các container và xóa chúng cùng với mạng và volume liên quan.
+- Bạn có thể sử dụng Docker Compose để quản lý các ứng dụng microservices, nơi mỗi dịch vụ được chạy trong một container riêng biệt và có thể giao tiếp với nhau thông qua mạng Docker.
+- Các container bên trong  Docker compose có chung 1 mạng, vì vậy chúng có thể giao tiếp với nhau thông qua tên dịch vụ được định nghĩa trong tệp `docker-compose.yml`.
+
+- VD: Docker compose file
+
+```yaml
+version: '3'
+services:
+  flask-app:
+    image: thuongtt060797/grade-submission-portal
+    container_name: flask-app
+    ports:
+      - "5001:5001"
+    environment:
+      - GRADE_SERVICE_HOST=node-server
+    depends_on:
+      - node-server
+
+  node-server:
+    image: thuongtt060797/grade-submission-api
+    container_name: node-server
+    ports:
+      - "3000:3000"
+```
+
+- Trong ví dụ này, chúng ta định nghĩa hai dịch vụ: `flask-app` và `node-server`. Mỗi dịch vụ sử dụng một Docker image đã được đẩy lên Docker Hub.
+- Dịch vụ `flask-app` sẽ chạy ứng dụng Flask và phụ thuộc vào dịch vụ `node-server`, nghĩa là `node-server` sẽ được khởi động trước khi `flask-app` được khởi động.
+- Chúng ta cũng thiết lập biến môi trường `GRADE_SERVICE_HOST` cho dịch vụ `flask-app` để nó có thể giao tiếp với dịch vụ `node-server`.
+- Để chạy ứng dụng này, bạn chỉ cần chạy lệnh `docker-compose up` trong thư mục chứa tệp `docker-compose.yml`. Docker Compose sẽ tự động tạo và khởi động các container cần thiết, thiết lập mạng và volume theo cấu hình đã định nghĩa
+- Bạn có thể truy cập ứng dụng Flask tại địa chỉ `http://localhost:5001` và ứng dụng Node.js tại địa chỉ `http://localhost:3000`.
+
+### Big Project E-commerce
+
+- Follow readme của từng project để biết cách chạy từng project.
+- Build image cho từng project sau đó đẩy lên Docker Hub.
+
+- CD vào từng thư mục chứa Dockerfile của từng project và chạy lệnh sau
+
+#### E-commerce UI
+
+```bash
+
+# Build image cho E-commerce UI
+
+thuongtt@thuongtt-ubuntu:~/Workspace/docker-tranning/05-docker-compose/e-commerce/ecommerce-ui$ docker build -t ecommerce-ui .
+```
+
+```bash
+# Run container cho E-commerce UI
+docker run --rm -p 4000:4000 --name ecommerce-ui ecommerce-ui
+```
+
+- Khi chúng ta cố gắng truy cập vào địa chỉ `http://localhost:4000`, chúng ta sẽ thấy giao diện của ứng dụng E-commerce UI. Tuy nhiên, ứng dụng này sẽ không hoạt động đúng vì nó cần kết nối với các dịch vụ khác như E-commerce Profile Management
+
+#### Tạo mạng Docker
+
+```bash
+# Tạo mạng Docker để kết nối các container
+docker network create ecommerce-network
+```
+
+- Xóa container cũ nếu có
+
+```bash
+docker rm -f ecommerce-ui
+```
+
+- Chạy lại container E-commerce UI với mạng mới
+
+```bash
+docker run --rm -p 4000:4000 --name ecommerce-ui --network ecommerce-network ecommerce-ui
+```
+
+- Chúng ta cũng cần cung cấp các biến môi trường cho ứng dụng E-commerce UI để nó có thể kết nối với các dịch vụ khác. Chúng ta sẽ sử dụng cờ `-e` để thiết lập biến môi trường khi chạy container E-commerce UI:
+
+```bash
+docker run --rm -p 4000:4000 -e REACT_APP_PROFILE_API_HOST=http://profile-management -e REACT_APP_PRODUCT_API_HOST=http://product-catalog -e REACT_APP_INVENTORY_API_HOST=http://product-inventory -e REACT_APP_ORDER_API_HOST=http://order-management -e REACT_APP_SHIPPING_API_HOST=http://shipping-and-handling -e REACT_APP_CONTACT_API_HOST=http://contact-support-team --network=ecommerce-network --name ecommerce-ui ecommerce-ui
+```
+
+#### E-commerce Profile Management
+
+```bash
+# Build image cho E-commerce Profile Management
+thuongtt@thuongtt-ubuntu:~/Workspace/docker-tranning/05-docker-compose/e-commerce/profile-management$ docker build -t profile-management .
+# Run container cho E-commerce Profile Management
+docker run --rm -p 3003:3003 --name profile-management --network ecommerce-network profile-management
+# Khi chúng ta cố gắng truy cập vào địa chỉ `http://localhost:3003`, chúng ta sẽ thấy giao diện của ứng dụng E-commerce Profile Management.
+```
+
+- Lúc này chúng ta có thể  truy cập vào E-commerce UI tại địa chỉ `http://localhost:4000` và E-commerce Profile Management tại địa chỉ `http://localhost:3003`.
+
+![alt text](image-29.png)
+
+#### E-commerce Shipping and Handling
+
+```bash
+# Build image cho E-commerce Shipping and Handling
+thuongtt@thuongtt-ubuntu:~/Workspace/docker-tranning/05-docker-compose/e-commerce/shipping-and-handling$ docker build -t shipping-and-handling .
+# Run container cho E-commerce Shipping and Handling
+docker run --rm -p 8080:8080 --name shipping-and-handling --network ecommerce-network shipping-and-handling
+# Khi chúng ta cố gắng truy cập vào địa chỉ `http://localhost:8080`, chúng ta sẽ thấy giao diện của ứng dụng E-commerce Shipping and Handling.
+```
+
+![alt text](image-30.png)
+
+#### E-commerce Contact Support Team
+
+```bash
+# Build image cho E-commerce Contact Support Team
+thuongtt@thuongtt-ubuntu:~/Workspace/docker-tranning/05-docker-compose/e-commerce/contact-support-team$ docker build -t contact-support-team .
+# Run container cho E-commerce Contact Support Team
+docker run --rm -p 8000:8000 --name contact-support-team --network ecommerce-network contact-support-team
+# Khi chúng ta cố gắng truy cập vào địa chỉ `http://localhost:8000`, chúng ta sẽ thấy giao diện của ứng dụng E-commerce Contact Support Team.
+```
+
+#### E-commerce Product Inventory
+
+```bash
+# Build image cho E-commerce Product Inventory
+thuongtt@thuongtt-ubuntu:~/Workspace/docker-tranning/05-docker-compose/e-commerce/product-inventory$ docker build -t product-inventory .
+# Run container cho E-commerce Product Inventory
+docker run --rm -p 3002:3002 --name product-inventory --network ecommerce-network product-inventory
+# Khi chúng ta cố gắng truy cập vào địa chỉ `http://localhost:3002`, chúng ta sẽ thấy giao diện của ứng dụng E-commerce Product Inventory.
+```
+
+#### E-commerce Product Catalog
+
+```bash
+# Build image cho E-commerce Product Catalog
+thuongtt@thuongtt-ubuntu:~/Workspace/docker-tranning/05-docker-compose/e-commerce/product-catalog$ docker build -t product-catalog .
+# Run container cho E-commerce Product Catalog
+docker run --rm -p 3001:3001 --name product-catalog --network ecommerce-network product-catalog
+# Khi chúng ta cố gắng truy cập vào địa chỉ `http://localhost:3001`, chúng ta sẽ thấy giao diện của ứng dụng E-commerce Product Catalog.
+
+```
+
+#### E-commerce Order Management
+
+```bash
+# Build image cho E-commerce Order Management
+thuongtt@thuongtt-ubuntu:~/Workspace/docker-tranning/05-docker-compose/e-commerce/order-management$ docker build -t order-management .
+# Run container cho E-commerce Order Management với các biến môi trường để kết nối với các dịch vụ khác
+docker run --rm -p 9090:9090 -e SHIPPING_HANDLING_API_HOST=http://shipping-and-handling -e PRODUCT_INVENTORY_API_HOST=http://product-inventory -e PRODUCT_CATALOG_API_HOST=http://product-catalog --name order-management --network ecommerce-network order-management
+# Khi chúng ta cố gắng truy cập vào địa chỉ `http://localhost:9090`, chúng ta sẽ thấy giao diện của ứng dụng E-commerce Order Management.
+```
+
+### Build Image và Push lên Docker Hub
+
+```bash
+docker build -t thuongtt060797/ecommerce-ui:1.0.0 .
+docker build -t thuongtt060797/profile-management:1.0.0 .
+docker build -t thuongtt060797/shipping-and-handling:1.0.0 .
+docker build -t thuongtt060797/contact-support-team:1.0.0 .
+docker build -t thuongtt060797/product-inventory:1.0.0 .
+docker build -t thuongtt060797/product-catalog:1.0.0 .
+docker build -t thuongtt060797/order-management:1.0.0 .
+```
+
+- Sau khi đã build và chạy các container, chúng ta có thể đẩy các image lên Docker Hub để chia sẻ với người khác hoặc sử dụng trên các máy khác.
+
+```bash
+docker push thuongtt060797/ecommerce-ui:1.0.0
+docker push thuongtt060797/profile-management:1.0.0
+docker push thuongtt060797/shipping-and-handling:1.0.0
+docker push thuongtt060797/contact-support-team:1.0.0
+docker push thuongtt060797/product-inventory:1.0.0
+docker push thuongtt060797/product-catalog:1.0.0
+docker push thuongtt060797/order-management:1.0.0
+```
+
+- Bây giờ, bạn có thể chia sẻ các Docker image này với người khác hoặc sử dụng chúng trên các máy khác bằng cách kéo (pull) chúng từ Docker Hub.
+
+```bash
+docker pull thuongtt060797/ecommerce-ui:1.0.0
+docker pull thuongtt060797/profile-management:1.0.0
+docker pull thuongtt060797/shipping-and-handling:1.0.0    
+docker pull thuongtt060797/contact-support-team:1.0.0
+docker pull thuongtt060797/product-inventory:1.0.0
+docker pull thuongtt060797/product-catalog:1.0.0
+docker pull thuongtt060797/order-management:1.0.0
+```
+
+### Build và Chạy Docker Compose
+
+- Để chạy toàn bộ ứng dụng E-commerce với tất cả các dịch vụ, chúng ta sẽ sử dụng Docker Compose. Tạo một tệp `docker-compose.yml` trong thư mục gốc của dự án với nội dung sau:
+
+```yaml
+version: '3.8'
+services:
+  ecommerce-ui:
+    image: thuongtt060797/ecommerce-ui:1.0.0
+    ports:
+      - "4000:4000"
+    environment:
+      - REACT_APP_PROFILE_API_HOST=http://profile-management
+      - REACT_APP_PRODUCT_API_HOST=http://product-catalog
+      - REACT_APP_INVENTORY_API_HOST=http://product-inventory
+      - REACT_APP_ORDER_API_HOST=http://order-management
+      - REACT_APP_SHIPPING_API_HOST=http://shipping-and-handling
+      - REACT_APP_CONTACT_API_HOST=http://contact-support-team
+    depends_on:
+      - profile-management
+      - product-catalog
+      - product-inventory
+      - order-management
+      - shipping-and-handling
+      - contact-support-team
+
+  profile-management:
+    image: thuongtt060797/profile-management:1.0.0
+    ports:
+      - "3003:3003"
+
+  shipping-and-handling:
+    image: thuongtt060797/shipping-and-handling:1.0.0
+    ports:
+      - "8080:8080"
+
+  contact-support-team:
+    image: thuongtt060797/contact-support-team:1.0.0
+    ports:
+      - "8000:8000"
+
+  product-inventory:
+    image: thuongtt060797/product-inventory:1.0.0
+    ports:
+      - "3002:3002"
+
+  product-catalog:
+    image: thuongtt060797/product-catalog:1.0.0
+    ports:
+      - "3001:3001"
+
+  order-management:
+    image: thuongtt060797/order-management:1.0.0
+    ports:
+      - "9090:9090"
+    environment:
+      - SHIPPING_HANDLING_API_HOST=http://shipping-and-handling
+      - PRODUCT_INVENTORY_API_HOST=http://product-inventory
+      - PRODUCT_CATALOG_API_HOST=http://product-catalog
+
+```
+
+- Tệp `docker-compose.yml` này định nghĩa tất cả các dịch vụ trong ứng dụng E-commerce, bao gồm E-commerce UI, Profile Management, Shipping and Handling, Contact Support Team, Product Inventory, Product Catalog và Order Management.
+- Để chạy toàn bộ ứng dụng E-commerce, bạn chỉ cần chạy lệnh sau trong thư mục chứa tệp `docker-compose.yml`:
+
+```bash
+docker-compose up -d
+```
+
+- Lệnh này sẽ tạo và khởi động tất cả các container được định nghĩa trong tệp `docker-compose.yml` trong chế độ nền (detached mode).
+- Bạn có thể kiểm tra trạng thái của các container bằng lệnh:
+
+```bash
+docker-compose ps
+```
+
+- Để dừng và xóa tất cả các container, mạng và volume được tạo bởi Docker Compose, bạn có thể sử dụng lệnh:
+
+```bash
+docker-compose down
+```
+
+- Lệnh này sẽ dừng tất cả các container và xóa chúng cùng với mạng và volume liên quan.
+- Bây giờ, bạn có thể truy cập ứng dụng E-commerce UI tại địa chỉ `http://localhost:4000`, Profile Management tại `http://localhost:3003`, Shipping and Handling tại `http://localhost:8080`, Contact Support Team tại `http://localhost:8000`, Product Inventory tại `http://localhost:3002`, Product Catalog tại `http://localhost:3001` và Order Management tại `http://localhost:9090`.
+- Tất cả các dịch vụ này đều được kết nối với nhau thông qua mạng `ecommerce-network`, cho phép chúng giao tiếp với nhau một cách dễ dàng.
