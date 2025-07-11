@@ -871,11 +871,6 @@ docker-compose up -d
 ```
 
 - Lệnh này sẽ tạo và khởi động tất cả các container được định nghĩa trong tệp `docker-compose.yml` trong chế độ nền (detached mode).
-- Bạn có thể kiểm tra trạng thái của các container bằng lệnh:
-
-```bash
-docker-compose ps
-```
 
 - Để dừng và xóa tất cả các container, mạng và volume được tạo bởi Docker Compose, bạn có thể sử dụng lệnh:
 
