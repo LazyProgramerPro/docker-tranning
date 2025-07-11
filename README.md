@@ -435,3 +435,163 @@ docker network ls
 ```bash
 docker network inspect my-network
 ```
+
+- Ngữ cảnh: Giả sử bạn có một ứng dụng web với nhiều dịch vụ khác nhau, chẳng hạn như một Service FE viết bằng PYTHON cần cung cấp 1 số biến ENV để chạy còn 1 Service BE viết bằng NODEJS
+
+![alt text](image-20.png)
+
+- Bài toán làm sao để chúng ta có thể kết nối các service này với nhau để chúng có thể giao tiếp với nhau.
+
+- Backend:
+
+```Dockerfile
+## Base Image
+
+## Working Directory
+
+## Install Dependencies
+
+## Copy Source code
+
+## Expose container port
+
+## Commands to execute application
+
+
+FROM node:14
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["node", "app.js"]
+
+```
+
+- Frontend:
+
+```Dockerfile
+## Base Image
+
+## Work Directory
+
+## Install requirements
+
+## Copy source code
+
+## Expose container port
+
+## Execute Application
+
+FROM python:3.8-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 5001
+
+CMD ["python", "app.py"]
+```
+
+- Build Image (CẦN CD VÀO THƯ MỤC CHỨA DOCKERFILE CỦA BẠN ĐỂ CÓ THỂ COPY ĐƯỢC CÁC FILE VÀO TRONG CONTAINER):
+
+```bash
+docker build -t thuongtt060797/grade-submission-api .
+docker build -t thuongtt060797/grade-submission-portal .
+```
+
+- Chạy các container:
+
+```bash
+docker run --name node-server --rm  -p 3000:3000 thuongtt060797/grade-submission-api
+docker run --name flask-app --rm -p 5001:5001 thuongtt060797/grade-submission-portal
+```
+
+- Kết quả:
+
+![alt text](image-21.png)![alt text](image-22.png)![alt text](image-23.png)
+
+- Bây giờ chúng ta có thể truy cập ứng dụng FE tại địa chỉ `http://localhost:5001` và ứng dụng BE tại địa chỉ `http://localhost:3000`.
+
+- Chúng ta cần cung cấp các biến môi trường cho ứng dụng FE để nó có thể kết nối với ứng dụng BE. Chúng ta sẽ sử dụng cờ `-e` để thiết lập biến môi trường khi chạy container FE:
+
+```bash
+docker run --name flask-app --rm -p 5001:5001 -e GRADE_SERVICE_HOST=node-server thuongtt060797/grade-submission-portal
+```
+
+- Lệnh này sẽ thiết lập biến môi trường `GRADE_SERVICE_HOST` với giá trị là tên của container BE (`node-server`), cho phép ứng dụng FE giao tiếp với ứng dụng BE.
+
+![alt text](image-24.png)
+
+- Tuy nhiên vẫn chưa có Network, chúng ta cần tạo một mạng Docker để kết nối các container này với nhau:
+
+![alt text](image-25.png)
+
+```bash
+docker network create my-network
+```
+
+- Sau đó, chúng ta sẽ chạy các container trên mạng này:
+
+```bash
+docker run --name node-server --network my-network -p 3000:3000 thuongtt060797/grade-submission-api
+docker run --name flask-app --network my-network -p 5001:5001 -e GRADE_SERVICE_HOST=node-server thuongtt060797/grade-submission-portal
+```
+
+- Bây giờ, ứng dụng FE có thể giao tiếp với ứng dụng BE thông qua tên container `node-server` mà không cần phải sử dụng địa chỉ IP.
+
+- `TRONG CÙNG 1 MẠNG, CÁC CONTAINER CÓ THỂ GIAO TIẾP VỚI NHAU THÔNG QUA TÊN CONTAINER HOẶC ĐỊA CHỈ IP.`
+
+![alt text](image-26.png)
+
+## Push/Pull Docker Image to Docker Hub
+
+- Để chia sẻ Docker image với người khác hoặc sử dụng trên các máy khác, bạn có thể đẩy image lên Docker Hub.
+- Đầu tiên, bạn cần đăng nhập vào Docker Hub bằng lệnh:
+
+```bash
+docker login
+```
+
+- Sau khi đăng nhập thành công, bạn có thể đẩy image lên Docker Hub bằng lệnh:
+
+```bash
+docker push <username>/<image_name>:<tag>
+
+# docker push thuongtt060797/grade-submission-api
+# docker push thuongtt060797/grade-submission-api:1.0.1
+# docker push thuongtt060797/grade-submission-portal
+```
+
+![alt text](image-27.png)
+
+- Đánh tag cho image:
+  - Tạo bản build mới
+  - Dùng docker tag để đánh tag cho image
+
+- Để sử dụng Docker image đã được đẩy lên Docker Hub, bạn có thể kéo (pull) image về máy của mình bằng lệnh:
+
+```bash
+docker pull <username>/<image_name>:<tag> 
+# docker pull thuongtt060797/grade-submission-api
+# docker pull thuongtt060797/grade-submission-portal
+```
+
+- Lệnh này sẽ tải xuống image từ Docker Hub về máy của bạn.
+- Sau khi tải xuống thành công, bạn có thể chạy image này bằng lệnh:
+
+```bash
+docker run --rm --name my-container -p 5000:5000 thuongtt060797/grade-submission-portal
+docker run --rm --name another-container -p 5002:5002 thuongtt060797/grade-submission-api
+docker run --rm --name additional-container -p 5003:5003 thuongtt060797/grade-submission-portal
+docker run --rm --name extra-container -p 5004:5004 thuongtt060797/grade-submission-api
+```
