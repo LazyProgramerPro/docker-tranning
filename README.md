@@ -950,3 +950,216 @@ docker-compose up -d
 ### Ecommerce Database
 
 - Vẫn sử dụng lại project Ecommerce trong phần 05, tuy nhiên các ứng dụng đã được thêm 1 số config để có thể kết nối với database thật
+- Khi 1 container chạy, nó sẽ khởi động các ứng dụng CSDL, các biến môi trường cần khởi tạo cần đúng với phiên bản của ứng dụng CSDL mà bạn đang sử dụng
+
+- MySQL: [<https://hub.docker.com/_/mysql>](https://hub.docker.com/_/mysql)
+
+```yaml
+version: '3.8'
+services:
+  profile-management:
+    image: thuongtt060797/profile-management:1.0.0
+    ports:
+      - "3003:3003"
+    depends_on:
+      - mysql_profile_management
+    environment: # Các biến môi trường cần thiết để kết nối với MySQL
+      - MYSQL_HOST=mysql_profile_management # Tên của service MySQL
+      - MYSQL_PORT=3306 # Cổng mặc định của MySQL
+      - MYSQL_DATABASE=profile_management # Tên cơ sở dữ liệu
+      - MYSQL_USER=profile_user # Tên người dùng
+      - MYSQL_PASSWORD=profile_password # Mật khẩu người dùng
+
+  mysql_profile_management: # Sẽ chạy mặc định trên cổng 3306
+    image: mysql:8.0
+    container_name: mysql_profile_management
+    environment:
+      - MYSQL_DATABASE=profile_management # Tên cơ sở dữ liệu
+      - MYSQL_USER=profile_user # Tên người dùng
+      - MYSQL_PASSWORD=profile_password # Mật khẩu người dùng
+      - MYSQL_ROOT_PASSWORD=root_password # Mật khẩu root (bắt buộc)
+    volumes:
+      - mysql_profile_management_data:/var/lib/mysql # Thư mục chứa dữ liệu của MySQL trong container
+volumes:
+  mysql_profile_management_data: # Tạo volume để lưu trữ dữ liệu của MySQL
+```
+
+- PostgreSQL: [<https://hub.docker.com/_/postgres>](https://hub.docker.com/_/postgres)
+
+```yaml
+version: '3.8'
+services:
+  product-inventory:
+    image: thuongtt060797/product-inventory:1.0.0
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres_product_inventory
+    environment:
+      - POSTGRES_HOST=postgres_product_inventory
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=product_inventory
+      - POSTGRES_USER=inventory_user
+      - POSTGRES_PASSWORD=inventory_password
+
+  postgres_product_inventory: # Sẽ chạy mặc định trên cổng 5432
+    image: postgres:14
+    container_name: postgres_product_inventory
+    environment:
+      - POSTGRES_DB=product_inventory
+      - POSTGRES_USER=inventory_user
+      - POSTGRES_PASSWORD=inventory_password
+    volumes:
+      - postgres_product_inventory_data:/var/lib/postgresql/data # Thư mục chứa dữ liệu của PostgreSQL trong container
+
+volumes:
+  postgres_product_inventory_data: # Tạo volume để lưu trữ dữ liệu của PostgreSQL
+```
+
+- MongoDB: [<https://hub.docker.com/_/mongo>](https://hub.docker.com/_/mongo)
+
+- Full docker-compose.yml cho E-commerce với MongoDB
+
+```yaml
+version: "3.8"
+services:
+  ecommerce-ui:
+    image: thuongtt060797/ecommerce-ui:1.0.0
+    ports:
+      - "4000:4000"
+    environment:
+      - REACT_APP_PROFILE_API_HOST=http://profile-management
+      - REACT_APP_PRODUCT_API_HOST=http://product-catalog
+      - REACT_APP_INVENTORY_API_HOST=http://product-inventory
+      - REACT_APP_ORDER_API_HOST=http://order-management
+      - REACT_APP_SHIPPING_API_HOST=http://shipping-and-handling
+      - REACT_APP_CONTACT_API_HOST=http://contact-support-team
+    depends_on:
+      - profile-management
+      - product-catalog
+      - product-inventory
+      - order-management
+      - shipping-and-handling
+      - contact-support-team
+
+  shipping-and-handling:
+    image: thuongtt060797/shipping-and-handling:1.0.0
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb_shipping
+    environment:
+      - MONGO_URI=mongo://mongodb_shipping:27017
+
+  mongodb_shipping: # Sẽ chạy mặc định trên cổng 27017
+    image: mongo
+    container_name: mongodb_shipping
+    volumes:
+      - mongodb_shipping_data:/data/db # /data/db là thư mục chứa dữ liệu của MongoDB trong container
+
+  contact-support-team:
+    image: thuongtt060797/contact-support-team:1.0.0
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb_contact_support
+    environment:
+      - MONGODB_HOST=mongodb_contact_support
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=contact_support
+
+  mongodb_contact_support: # Sẽ chạy mặc định trên cổng 27017
+    image: mongo
+    container_name: mongodb_contact_support
+    volumes:
+      - mongodb_contact_support_data:/data/db # /data/db là thư mục chứa dữ liệu của MongoDB trong container
+
+  product-catalog:
+    image: thuongtt060797/product-catalog:1.0.0
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongodb_product_catalog
+    environment:
+      - MONGODB_HOST=mongodb_product_catalog
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=product_catalog
+
+  mongodb_product_catalog: # Sẽ chạy mặc định trên cổng 27017
+    image: mongo
+    container_name: mongodb_product_catalog
+    volumes:
+      - mongodb_product_catalog_data:/data/db # /data/db là thư mục chứa dữ liệu của MongoDB trong container
+
+  order-management:
+    image: thuongtt060797/order-management:1.0.0
+    ports:
+      - "9090:9090"
+    depends_on:
+      - mongodb_order_management
+    environment:
+      - SHIPPING_HANDLING_API_HOST=http://shipping-and-handling
+      - PRODUCT_INVENTORY_API_HOST=http://product-inventory
+      - PRODUCT_CATALOG_API_HOST=http://product-catalog
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb_order_management:27017/order_management
+
+  mongodb_order_management: # Sẽ chạy mặc định trên cổng 27017
+    image: mongo
+    container_name: mongodb_order_management
+    volumes:
+      - mongodb_order_management_data:/data/db # /data/db là thư mục chứa dữ liệu của MongoDB trong container
+
+  product-inventory:
+    image: thuongtt060797/product-inventory:1.0.0
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres_product_inventory
+    environment:
+      - POSTGRES_HOST=postgres_product_inventory
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=product_inventory
+      - POSTGRES_USER=inventory_user
+      - POSTGRES_PASSWORD=inventory_password
+
+  postgres_product_inventory: # Sẽ chạy mặc định trên cổng 5432
+    image: postgres:14
+    container_name: postgres_product_inventory
+    environment:
+      - POSTGRES_DB=product_inventory
+      - POSTGRES_USER=inventory_user
+      - POSTGRES_PASSWORD=inventory_password
+    volumes:
+      - postgres_product_inventory_data:/var/lib/postgresql/data # Thư mục chứa dữ liệu của PostgreSQL trong container
+
+  profile-management:
+    image: thuongtt060797/profile-management:1.0.0
+    ports:
+      - "3003:3003"
+    depends_on:
+      - mysql_profile_management
+    environment: # Các biến môi trường cần thiết để kết nối với MySQL
+      - MYSQL_HOST=mysql_profile_management # Tên của service MySQL
+      - MYSQL_PORT=3306 # Cổng mặc định của MySQL
+      - MYSQL_DATABASE=profile_management # Tên cơ sở dữ liệu
+      - MYSQL_USER=profile_user # Tên người dùng
+      - MYSQL_PASSWORD=profile_password # Mật khẩu người dùng
+
+  mysql_profile_management: # Sẽ chạy mặc định trên cổng 3306
+    image: mysql:8.0
+    container_name: mysql_profile_management
+    environment:
+      - MYSQL_DATABASE=profile_management # Tên cơ sở dữ liệu
+      - MYSQL_USER=profile_user # Tên người dùng
+      - MYSQL_PASSWORD=profile_password # Mật khẩu người dùng
+      - MYSQL_ROOT_PASSWORD=root_password # Mật khẩu root
+    volumes:
+      - mysql_profile_management_data:/var/lib/mysql # Thư mục chứa dữ liệu của MySQL trong container
+volumes:
+  mongodb_product_catalog_data:
+  mongodb_contact_support_data:
+  mongodb_shipping_data:
+  mongodb_order_management_data:
+  mysql_profile_management_data:
+  postgres_product_inventory_data:
+```
