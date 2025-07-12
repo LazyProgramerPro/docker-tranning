@@ -1163,3 +1163,34 @@ volumes:
   mysql_profile_management_data:
   postgres_product_inventory_data:
 ```
+
+## Deploying Docker Container to Cloud
+
+- Cài đặt và tạo tk với mongoDB Atlas: <https://www.mongodb.com/docs/atlas/getting-started/>
+- Tạo cluster mới và tạo database mới với tên `grade_db`
+
+```yaml
+# Tạo database mới với tên grade_db
+ - MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/grade_db?retryWrites=true&w=majority
+```
+
+- Check kết nối với MongoDB Atlas: <https://replit.com/@rslim087uyt/Nodejs-MongoDB-Connections?v=1>
+
+- Setting up containers:
+  - Khi build chúng ta hay dùng lệnh `docker build -t <image_name> .` để build image từ Dockerfile.
+  - Tuy nhiên, khi deploy lên cloud, chúng ta cần phải sử dụng lệnh `docker buildx build --platform linux/amd64,linux/arm64 -t <image_name> .` để build image cho cả hai kiến trúc CPU là amd64 và arm64.
+  - Lí do là khi chúng ta sử dụng lệnh build thông thường, Docker sẽ chỉ build cho kiến trúc CPU của máy tính hiện tại. Điều này có thể dẫn đến việc image không tương thích với các máy chủ cloud sử dụng kiến trúc CPU khác.
+- Bash:
+
+```bash
+docker buildx create --name my-builder
+docker buildx use my-builder
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t thuongtt060797/grade-submission-api:1.0.0 --push .
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t thuongtt060797/grade-submission-portal:1.0.0 --push .
+```
+
+- Nên chạy test trên local trước khi deploy lên cloud để đảm bảo ứng dụng hoạt động đúng.
+
+## Đó là toàn bộ nội dung về Docker, Docker Network, Docker Compose và cách deploy ứng dụng lên cloud. Hy vọng bạn đã nắm vững các khái niệm và có thể áp dụng chúng vào các dự án thực tế của mình. Nếu có bất kỳ câu hỏi nào, đừng ngần ngại hỏi nhé
+
+## From thuongtt060797 with love ❤️
